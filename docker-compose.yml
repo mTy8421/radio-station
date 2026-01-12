@@ -1,0 +1,34 @@
+services:
+  # 1. Icecast Server: ตัวกระจายสัญญาณวิทยุ
+  icecast:
+    image: moul/icecast
+    environment:
+      - ICECAST_SOURCE_PASSWORD=hackme # รหัสผ่านสำหรับ AutoDJ เชื่อมต่อ (เปลี่ยนได้)
+      - ICECAST_ADMIN_PASSWORD=adminhackme
+      - ICECAST_PASSWORD=hackme
+      - ICECAST_HOSTNAME=localhost
+    ports:
+      - "8000:8000"
+    networks:
+      - radio-net
+
+  # 2. AutoDJ & API: ตัวเปิดเพลงและจัดการไฟล์
+  autodj:
+    build: ./app
+    restart: always
+    volumes:
+      - ./music:/app/music
+    ports:
+      - "8080:80" # Port สำหรับ Upload เพลงและตั้งค่า API
+    environment:
+      - ICECAST_HOST=icecast
+      - ICECAST_PORT=8000
+      - ICECAST_PASSWORD=hackme
+      - ICECAST_MOUNT=/stream
+    depends_on:
+      - icecast
+    networks:
+      - radio-net
+
+networks:
+  radio-net:
